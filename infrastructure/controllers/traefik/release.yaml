@@ -49,8 +49,11 @@ spec:
         # Permanent redirect to HTTPS. Public :80 is firewalled so this
         # only fires for tailnet clients; Cloudflare handles the public
         # case at its edge via the Always-Use-HTTPS zone setting.
-        redirectTo:
-          port: websecure
+        redirections:
+          entryPoint:
+            to: websecure
+            scheme: https
+            permanent: true
       websecure:
         port: 443
         expose:
