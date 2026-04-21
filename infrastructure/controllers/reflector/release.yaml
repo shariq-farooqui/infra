@@ -1,0 +1,33 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: reflector
+  namespace: reflector
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: reflector
+      version: "10.0.35"
+      sourceRef:
+        kind: HelmRepository
+        name: emberstack
+        namespace: reflector
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Watches Secrets and ConfigMaps cluster-wide and mirrors those
+    # annotated for reflection into permitted namespaces. No CRDs; just
+    # annotations on the source Secret.
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 128Mi

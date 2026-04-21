@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-ingress
+  namespace: postgres
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes:
+    - Ingress
+  # Only namespaces that explicitly label themselves as postgres clients
+  # can reach the server. Each app opts in via its namespace metadata.
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              postgres-client: "true"
+      ports:
+        - protocol: TCP
+          port: 5432

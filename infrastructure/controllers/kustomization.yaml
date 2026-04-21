@@ -5,3 +5,5 @@ resources:
   - traefik
   - tailscale-operator
   - observability
+  - reflector
+  - postgres
