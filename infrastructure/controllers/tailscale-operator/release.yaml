@@ -1,0 +1,34 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+  namespace: tailscale
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: tailscale-operator
+      version: "1.96.5"
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+        namespace: tailscale
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # OAuth client credentials come from the sops-encrypted Secret deployed
+  # alongside (configs/tailscale-operator/secrets.yaml). The chart's values
+  # are merged with that Secret's data.values key at install time.
+  valuesFrom:
+    - kind: Secret
+      name: tailscale-operator-oauth
+      valuesKey: values.yaml
+  values:
+    operatorConfig:
+      hostname: tailscale-operator
+    apiServerProxyConfig:
+      mode: "false"
