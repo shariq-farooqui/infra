@@ -61,15 +61,11 @@ spec:
         exposedPort: 443
         tls:
           enabled: true
-    # Prometheus metrics endpoint on the pod. The ServiceMonitor gets
-    # enabled once kube-prometheus-stack installs the monitoring.coreos.com
-    # CRDs; enabling it before then makes the Helm install abort on
-    # "You have to deploy monitoring.coreos.com/v1 first".
     metrics:
       prometheus:
         enabled: true
         serviceMonitor:
-          enabled: false
+          enabled: true
     logs:
       general:
         format: json

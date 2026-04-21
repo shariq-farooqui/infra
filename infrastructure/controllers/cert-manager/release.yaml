@@ -30,7 +30,7 @@ spec:
       replicaCount: 1
     cainjector:
       replicaCount: 1
-    # ServiceMonitor needs monitoring.coreos.com CRDs from
-    # kube-prometheus-stack; leaving it off until that stack lands.
     prometheus:
-      enabled: false
+      enabled: true
+      servicemonitor:
+        enabled: true

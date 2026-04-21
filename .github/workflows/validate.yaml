@@ -24,3 +24,7 @@ jobs:
         with:
           path: clusters/homelab
           enable-helm: "true"
+          # Tells helm template's capability check that ServiceMonitor is
+          # available (kube-prometheus-stack installs the CRDs at runtime;
+          # render with --skip-crds can't see them).
+          api-versions: "policy/v1/PodDisruptionBudget,monitoring.coreos.com/v1"
