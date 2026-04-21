@@ -1,0 +1,86 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: observability
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: loki
+      version: "6.55.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: observability
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Monolithic (SingleBinary) mode: one pod runs reader, writer and
+    # backend. Distributed mode is for multi-node scale-out; on a single
+    # homelab host the single binary is the maintained minimum.
+    deploymentMode: SingleBinary
+    loki:
+      auth_enabled: false
+      commonConfig:
+        replication_factor: 1
+      # Schema v13 is the current stable; previous repos defaulted to v11
+      # which is no longer the chart default and triggers a noisy warning.
+      schemaConfig:
+        configs:
+          - from: "2024-04-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: loki_index_
+              period: 24h
+      storage:
+        type: filesystem
+      # Ingester limits reduced to cut memory on a 128 GB box with plenty
+      # of headroom but no need to tune for scale.
+      limits_config:
+        retention_period: 30d
+        allow_structured_metadata: true
+    singleBinary:
+      replicas: 1
+      persistence:
+        enabled: true
+        storageClass: local-path
+        size: 10Gi
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+    # SimpleScalable and Distributed modes share the same values tree as
+    # SingleBinary; zero them explicitly so the chart's validate hook
+    # doesn't trip on "both modes have replicas > 0".
+    write:
+      replicas: 0
+    read:
+      replicas: 0
+    backend:
+      replicas: 0
+    # Subcharts not needed in single-binary mode; disable to keep the
+    # install surface tight.
+    chunksCache:
+      enabled: false
+    resultsCache:
+      enabled: false
+    lokiCanary:
+      enabled: false
+    test:
+      enabled: false
+    # Default config pulls in a "gateway" nginx pod. Keep it — Grafana's
+    # data source points at http://loki-gateway.observability.svc, which
+    # is easier than threading the write/read path through data sources.
+    gateway:
+      enabled: true
+      replicas: 1

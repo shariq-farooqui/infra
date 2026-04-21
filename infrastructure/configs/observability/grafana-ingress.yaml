@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  # ingressClassName: tailscale tells the Tailscale Operator to expose
+  # this Service on the tailnet rather than through Traefik. TLS and
+  # hostname registration happen inside the operator; no cert-manager
+  # or DNS plumbing needed.
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - monitoring
+      secretName: monitoring-tls
+  rules:
+    - host: monitoring
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kps-grafana
+                port:
+                  number: 80
