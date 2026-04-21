@@ -6,6 +6,10 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.11"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.52"
+    }
   }
 }
 
@@ -20,3 +24,7 @@ provider "github" {
     pem_file        = file(var.github_app_pem_path)
   }
 }
+
+# Cloudflare provider reads CLOUDFLARE_API_TOKEN from the environment. Token
+# scopes needed so far: Account > Workers R2 Storage:Edit (for the R2 bucket).
+provider "cloudflare" {}

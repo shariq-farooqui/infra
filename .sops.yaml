@@ -1,0 +1,16 @@
+---
+# sops encryption policy: creation_rules define which files get encrypted and
+# which age public keys can decrypt them.
+#
+# Rules are evaluated top-to-bottom against path_regex; the first match wins.
+# When a new recipient joins, add its age public key under `age:` and run
+# `sops updatekeys <file>` on every existing encrypted file so the stored
+# ciphertext is re-encrypted to include the new recipient.
+creation_rules:
+  # Host secrets for the homelab: decrypt on the laptop (operator edits) and
+  # on the host itself (sops-nix decrypts at NixOS activation time using the
+  # host's SSH ed25519 key, converted to age via ssh-to-age).
+  - path_regex: nixos/hosts/.+/secrets\.yaml$
+    age: >-
+      age14gl7ry2n8ugwfhfjsd6gn0egsyxhf9yudpavqm0h8saw6yuuvgqsvkr5sl,
+      age1w6ty2zykemu7rq3effs4xl9mucrc0smesm5ad8nhzam63ljhv5sqy63l3t

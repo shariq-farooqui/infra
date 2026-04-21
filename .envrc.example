@@ -1,8 +1,7 @@
 # Local-only environment. Copy to .envrc, fill in, then `direnv allow`.
 #
 # direnv exports these when you cd into the repo. Only the variable list is
-# tracked; values stay local. Exports land in follow-up commits as the tools
-# that need them arrive.
+# tracked; values stay local.
 
 # OpenTofu: GitHub App auth. IDs come from https://github.com/settings/apps;
 # the PEM is the App's private key downloaded at creation, stored under
@@ -10,3 +9,13 @@
 export TF_VAR_github_app_id="REPLACE_ME"
 export TF_VAR_github_installation_id="REPLACE_ME"
 export TF_VAR_github_app_pem_path="$HOME/.config/homelab/REPLACE_ME.pem"
+
+# sops: path to the operator's age private key. sops reads this when you
+# `sops <file>` to edit an encrypted secret. Public recipient is listed
+# in .sops.yaml; the private half never leaves ~/.config/homelab/.
+export SOPS_AGE_KEY_FILE="$HOME/.config/homelab/sops-operator.key"
+
+# Cloudflare: API token consumed by the cloudflare tofu provider. Scope
+# the token narrowly in dash.cloudflare.com: Account > Workers R2
+# Storage:Edit is enough for everything this repo manages today.
+export CLOUDFLARE_API_TOKEN="REPLACE_ME"
