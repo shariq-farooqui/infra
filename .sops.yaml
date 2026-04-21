@@ -18,7 +18,12 @@ creation_rules:
   # time. Two recipients: the laptop (so `sops <file>` can decrypt in-place
   # for edits) and the cluster's dedicated age keypair, whose private half
   # lives as a Secret named `sops-age` in the flux-system namespace.
+  #
+  # encrypted_regex keeps apiVersion/kind/metadata plaintext so kustomize
+  # and flux-local can parse the Secret structurally; only the `data` and
+  # `stringData` fields get encrypted.
   - path_regex: (infrastructure|apps)/.*/secrets\.ya?ml$
+    encrypted_regex: "^(data|stringData)$"
     age: >-
       age14gl7ry2n8ugwfhfjsd6gn0egsyxhf9yudpavqm0h8saw6yuuvgqsvkr5sl,
       age17zy9ynlrmqcs4u03hh2echldh7utle2pxs62g4hzrvl7eswyqyuqt8hra9
