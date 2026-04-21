@@ -3,3 +3,10 @@
 # direnv exports these when you cd into the repo. Only the variable list is
 # tracked; values stay local. Exports land in follow-up commits as the tools
 # that need them arrive.
+
+# OpenTofu: GitHub App auth. IDs come from https://github.com/settings/apps;
+# the PEM is the App's private key downloaded at creation, stored under
+# ~/.config/homelab/ with chmod 600.
+export TF_VAR_github_app_id="REPLACE_ME"
+export TF_VAR_github_installation_id="REPLACE_ME"
+export TF_VAR_github_app_pem_path="$HOME/.config/homelab/REPLACE_ME.pem"

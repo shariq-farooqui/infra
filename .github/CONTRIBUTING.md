@@ -16,6 +16,7 @@ This repository describes my personal homelab, so I do not expect external contr
 ## Branching and merging
 
 - Branches: `feat/<name>`, `fix/<name>`, `docs/<name>`, and so on.
+- `main` requires signed commits, linear history, and a passing lint check.
 - Merges are local: rebase the feature branch onto `main`, then `git merge --ff-only` and push. The PR auto-closes; per-commit history stays visible on the PR page.
 
 ## Layout
