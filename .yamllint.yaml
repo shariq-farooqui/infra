@@ -1,6 +1,11 @@
 ---
 extends: default
 
+# Flux's components manifest is vendored from `flux install --export` and
+# shouldn't be reformatted to match our house style.
+ignore: |
+  clusters/homelab/flux-system/gotk-components.yaml
+
 rules:
   # 120 is the ceiling; image refs, annotations and URLs push past 80 often
   # enough that the stricter default is noise. Warning, not error.
