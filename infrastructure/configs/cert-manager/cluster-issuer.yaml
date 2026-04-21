@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: shariq.farooqui@outlook.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    # DNS-01 via Cloudflare rather than HTTP-01 for two reasons: no need
+    # to expose port 80 for ACME challenges, and it works before the
+    # firewall is open publicly at all. cert-manager adds and removes
+    # `_acme-challenge.*` TXT records in the farooqui.ai zone using the
+    # API token in `cloudflare-api-token`.
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+        selector:
+          dnsZones:
+            - farooqui.ai

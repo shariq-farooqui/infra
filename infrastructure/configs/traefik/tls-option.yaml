@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: cloudflare-origin-pull
+  namespace: traefik
+spec:
+  # Traefik refuses any HTTPS handshake on a router with this TLSOption
+  # unless the client presents a cert signed by the CAs in the referenced
+  # secrets. Cloudflare's edge is the only party that holds a key signed
+  # by the Origin Pull CA, so the handshake filters out everything else —
+  # random port scanners, other CF customers using a different cert chain,
+  # direct-IP curl, all fail at TLS.
+  clientAuth:
+    secretNames:
+      - cloudflare-origin-pull-ca
+    clientAuthType: RequireAndVerifyClientCert
