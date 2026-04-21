@@ -40,10 +40,21 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30
+          # nginx-unprivileged runs as uid 101 and writes its PID and temp
+          # paths under /tmp; an emptyDir there lets readOnlyRootFilesystem
+          # stay true while nginx still starts.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            runAsNonRoot: true
             capabilities:
               drop:
                 - ALL
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
