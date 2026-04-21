@@ -55,6 +55,16 @@ resource "cloudflare_record" "status" {
   comment = "Gatus uptime page"
 }
 
+resource "cloudflare_record" "analytics" {
+  zone_id = data.cloudflare_zone.farooqui.id
+  name    = "analytics"
+  type    = "A"
+  content = var.homelab_public_ip
+  proxied = true
+  ttl     = 1
+  comment = "Umami analytics"
+}
+
 # Authenticated Origin Pulls: CF presents a client cert signed by the
 # Origin Pull CA on every fetch; Traefik's TLSOption in the cluster
 # requires that client cert. Together these ensure only CF can speak
