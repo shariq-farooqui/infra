@@ -59,6 +59,9 @@ spec:
         ruleSelectorNilUsesHelmValues: false
     grafana:
       replicas: 1
+      # Grafana is a subchart so the umbrella fullnameOverride doesn't
+      # reach it; set it explicitly so the Service lands at `grafana`.
+      fullnameOverride: grafana
       defaultDashboardsTimezone: Europe/London
       resources:
         requests:
