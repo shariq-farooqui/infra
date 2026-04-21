@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)"
+  ],
+  "timezone": "Europe/London",
+  "schedule": ["before 4am on monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "matchManagers": ["helm-values", "flux"],
+      "groupName": "helm"
+    },
+    {
+      "matchManagers": ["terraform"],
+      "groupName": "terraform-providers"
+    }
+  ]
+}

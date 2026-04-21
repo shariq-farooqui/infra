@@ -1,0 +1,26 @@
+---
+# Renders every Flux Kustomization + HelmRelease offline and validates the
+# resulting manifests against Kubernetes schemas. Catches chart-version
+# schema drift in the PR before it hits the live cluster.
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  flux-local:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: fluxcd/flux2/action@v2.8.6
+
+      - uses: allenporter/flux-local/action/test@8.2.0
+        with:
+          path: clusters/homelab
+          enable-helm: "true"
