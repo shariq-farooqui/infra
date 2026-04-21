@@ -1,0 +1,36 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.16.x
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: cert-manager
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Install the cert-manager CRDs as part of the release. Not strictly
+    # the chart-author-recommended pattern, but simpler than a separate
+    # CRDs release and adequate for a single-cluster setup.
+    installCRDs: true
+    replicaCount: 1
+    webhook:
+      replicaCount: 1
+    cainjector:
+      replicaCount: 1
+    # ServiceMonitor needs monitoring.coreos.com CRDs from
+    # kube-prometheus-stack; leaving it off until that stack lands.
+    prometheus:
+      enabled: false

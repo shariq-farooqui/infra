@@ -1,0 +1,84 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: traefik
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: traefik
+      version: "36.x"
+      sourceRef:
+        kind: HelmRepository
+        name: traefik
+        namespace: traefik
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Single replica on a single-node cluster. A Deployment controller
+    # rather than DaemonSet so the pod doesn't restart whenever nodes
+    # change.
+    deployment:
+      replicas: 1
+    # IngressClass "traefik" so Ingress resources without an explicit class
+    # land on this controller. DNS-01 ACME challenges don't hit Traefik at
+    # all, but HTTP-01 would require this to be the default class too.
+    ingressClass:
+      enabled: true
+      isDefaultClass: true
+      name: traefik
+    # Service type LoadBalancer so k3s's servicelb allocates node IPs to
+    # the Traefik ports. The host firewall allows 443 publicly and 80
+    # only via tailscale0 (see nixos flake), so inbound HTTPS from
+    # Cloudflare works and HTTP redirects stay tailnet-internal.
+    service:
+      enabled: true
+      type: LoadBalancer
+    ports:
+      web:
+        port: 80
+        expose:
+          default: true
+        exposedPort: 80
+        # Permanent redirect to HTTPS. Public :80 is firewalled so this
+        # only fires for tailnet clients; Cloudflare handles the public
+        # case at its edge via the Always-Use-HTTPS zone setting.
+        redirectTo:
+          port: websecure
+      websecure:
+        port: 443
+        expose:
+          default: true
+        exposedPort: 443
+        tls:
+          enabled: true
+    # Prometheus metrics endpoint on the pod. The ServiceMonitor gets
+    # enabled once kube-prometheus-stack installs the monitoring.coreos.com
+    # CRDs; enabling it before then makes the Helm install abort on
+    # "You have to deploy monitoring.coreos.com/v1 first".
+    metrics:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: false
+    logs:
+      general:
+        format: json
+        level: INFO
+      access:
+        enabled: true
+        format: json
+    # Modest resource requests/limits so Traefik can't eat the host.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
