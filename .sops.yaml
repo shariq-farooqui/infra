@@ -14,3 +14,11 @@ creation_rules:
     age: >-
       age14gl7ry2n8ugwfhfjsd6gn0egsyxhf9yudpavqm0h8saw6yuuvgqsvkr5sl,
       age1w6ty2zykemu7rq3effs4xl9mucrc0smesm5ad8nhzam63ljhv5sqy63l3t
+  # Cluster secrets consumed by Flux's kustomize-controller at reconcile
+  # time. Two recipients: the laptop (so `sops <file>` can decrypt in-place
+  # for edits) and the cluster's dedicated age keypair, whose private half
+  # lives as a Secret named `sops-age` in the flux-system namespace.
+  - path_regex: (infrastructure|apps)/.*/secrets\.ya?ml$
+    age: >-
+      age14gl7ry2n8ugwfhfjsd6gn0egsyxhf9yudpavqm0h8saw6yuuvgqsvkr5sl,
+      age17zy9ynlrmqcs4u03hh2echldh7utle2pxs62g4hzrvl7eswyqyuqt8hra9
