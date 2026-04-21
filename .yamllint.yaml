@@ -1,0 +1,17 @@
+---
+extends: default
+
+rules:
+  # 120 is the ceiling; image refs, annotations and URLs push past 80 often
+  # enough that the stricter default is noise. Warning, not error.
+  line-length:
+    max: 120
+    level: warning
+  # GitHub Actions uses `on:` as a top-level key. The default truthy rule
+  # flags that as a typoed boolean; disabling key-checking lets it pass while
+  # still catching stray `yes`/`no` in values.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+  # `---` markers only matter for multi-document streams.
+  document-start: disable

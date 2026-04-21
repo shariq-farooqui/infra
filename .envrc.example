@@ -1,0 +1,5 @@
+# Local-only environment. Copy to .envrc, fill in, then `direnv allow`.
+#
+# direnv exports these when you cd into the repo. Only the variable list is
+# tracked; values stay local. Exports land in follow-up commits as the tools
+# that need them arrive.

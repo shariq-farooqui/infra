@@ -1,0 +1,39 @@
+---
+# Runs the same pre-commit suite used locally, so a push that passes
+# `pre-commit run --all-files` on a contributor's machine also passes CI.
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only token; this workflow publishes nothing.
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      # uv installs the pre-commit CLI into an isolated environment on PATH.
+      # enable-cache defaults to "auto" which scans for Python dep files and
+      # warns when none match; we have none, so disable caching explicitly.
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: false
+
+      # pre-commit stores each hook's isolated environment under ~/.cache/
+      # pre-commit; cache key invalidates only when the hook config changes.
+      - uses: actions/cache@v5.0.5
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: uv tool install pre-commit@4.5.1
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure

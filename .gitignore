@@ -1,0 +1,7 @@
+# OpenTofu: per-machine provider cache and state. State can hold secrets.
+opentofu/.terraform/
+opentofu/*.tfstate
+opentofu/*.tfstate.*
+
+# direnv: local values, derived from .envrc.example.
+.envrc
