@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gatus
+  namespace: gatus
+  annotations:
+    # cert-manager sees this annotation and issues a cert for every host
+    # in `spec.tls.hosts` using the named ClusterIssuer. The issued cert
+    # lands in the `secretName` secret.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Require Cloudflare's Origin Pull mTLS on every HTTPS handshake.
+    # Only Cloudflare's edge holds a cert signed by the Origin Pull CA,
+    # so direct-IP requests fail at TLS, not at the app.
+    traefik.ingress.kubernetes.io/router.tls.options: traefik-cloudflare-origin-pull@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - status.farooqui.ai
+      secretName: status-farooqui-tls
+  rules:
+    - host: status.farooqui.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gatus
+                port:
+                  number: 80

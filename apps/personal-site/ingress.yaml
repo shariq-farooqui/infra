@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: personal-site
+  namespace: personal-site
+  annotations:
+    # cert-manager sees this annotation and issues a cert covering every
+    # host in spec.tls.hosts via the letsencrypt-prod ClusterIssuer; the
+    # cert lands in the named secret.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Traefik TLSOption: require a client cert signed by the Cloudflare
+    # Origin Pull CA on every HTTPS handshake, so direct-IP requests to
+    # the origin fail at TLS rather than reaching the app.
+    traefik.ingress.kubernetes.io/router.tls.options: traefik-cloudflare-origin-pull@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - farooqui.ai
+        - www.farooqui.ai
+      secretName: farooqui-ai-tls
+  rules:
+    - host: farooqui.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: personal-site
+                port:
+                  number: 80
+    - host: www.farooqui.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: personal-site
+                port:
+                  number: 80
