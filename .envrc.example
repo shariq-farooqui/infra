@@ -15,11 +15,11 @@ export TF_VAR_github_app_pem_path="$HOME/.config/homelab/REPLACE_ME.pem"
 # in .sops.yaml; the private half never leaves ~/.config/homelab/.
 export SOPS_AGE_KEY_FILE="$HOME/.config/homelab/sops-operator.key"
 
-# Cloudflare: API token consumed by the cloudflare tofu provider. Scopes
-# needed: Account > Workers R2 Storage:Edit, Zone:Read, Zone:DNS:Edit,
-# Zone:Zone Settings:Edit on farooqui.ai.
+# Cloudflare: API token consumed by the cloudflare tofu provider. Scopes:
+# Account > Workers R2 Storage: Edit; Zone > Zone: Read; Zone > DNS: Edit;
+# Zone > Zone Settings: Edit; Zone > SSL and Certificates: Edit on
+# farooqui.ai.
 export CLOUDFLARE_API_TOKEN="REPLACE_ME"
 
-# Homelab public IP: the Hetzner server's IPv4. Kept out of source so the
-# repo doesn't hardcode an IP a recruiter could port-scan.
+# Homelab public IP: the Hetzner server's IPv4.
 export TF_VAR_homelab_public_ip="REPLACE_ME"

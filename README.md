@@ -4,7 +4,7 @@
 [![lint](https://github.com/shariq-farooqui/infra/actions/workflows/lint.yaml/badge.svg)](https://github.com/shariq-farooqui/infra/actions/workflows/lint.yaml)
 [![licence](https://img.shields.io/github/license/shariq-farooqui/infra?color=blue)](LICENSE)
 
-Declarative infrastructure for my single-node homelab. A Hetzner server running NixOS + k3s, reconciled from this repo by Flux. Public site at [farooqui.ai](https://farooqui.ai), status page at [status.farooqui.ai](https://status.farooqui.ai), tailnet-only Grafana for metrics and logs, restic snapshots to Cloudflare R2.
+Declarative infrastructure for my single-node homelab. A Hetzner server running NixOS + k3s, reconciled from this repo by Flux. Public site at [farooqui.ai](https://farooqui.ai), status page at [status.farooqui.ai](https://status.farooqui.ai), self-hosted Umami analytics for that site, tailnet-only Grafana for metrics and logs, and daily restic snapshots to Cloudflare R2.
 
 ## Layout
 
