@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: farooqui-ai-wildcard
+  namespace: traefik
+spec:
+  secretName: farooqui-ai-wildcard-tls
+  # Cover both the apex and any single-label subdomain. LE issues
+  # wildcards only via DNS-01, which the cluster-issuer is already
+  # configured for.
+  dnsNames:
+    - farooqui.ai
+    - "*.farooqui.ai"
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  # Renew 30 days before expiry. Leaves headroom for a retry loop if
+  # DNS-01 propagation is sluggish without tripping the 14-day warning
+  # alert defined in infrastructure/configs/observability.
+  duration: 2160h  # 90d
+  renewBefore: 720h # 30d

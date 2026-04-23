@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cert-manager-expiry
+  namespace: observability
+spec:
+  groups:
+    - name: cert-manager-expiry
+      rules:
+        # Warning 14 days out: cert-manager's own renewBefore is 30d, so a
+        # firing alert means two weeks of renewal attempts have already
+        # failed. Worth investigating before it's urgent.
+        - alert: CertificateExpiringSoon
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() < (14 * 24 * 3600)
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "TLS cert {{ $labels.name }} expires in under 14 days"
+            description: >
+              cert-manager Certificate {{ $labels.namespace }}/{{ $labels.name }}
+              expires at {{ $value | humanizeDuration }}. Automatic renewal
+              should have fired by now; check cert-manager logs and the
+              Cloudflare API token.
+        # Critical 3 days out: at this point public TLS is about to break.
+        - alert: CertificateExpiringCritical
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() < (3 * 24 * 3600)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TLS cert {{ $labels.name }} expires in under 3 days"
+            description: >
+              cert-manager Certificate {{ $labels.namespace }}/{{ $labels.name }}
+              is critically close to expiry. Issue a manual renewal or
+              investigate the ACME solver.
+        # Catches the opposite failure mode: cert-manager thinks the cert
+        # is healthy but the Ready condition flipped to False (bad DNS
+        # record, hit LE rate limit, etc.).
+        - alert: CertificateNotReady
+          expr: |
+            certmanager_certificate_ready_status{condition="False"} == 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Certificate {{ $labels.name }} is not Ready"
+            description: >
+              cert-manager reports {{ $labels.namespace }}/{{ $labels.name }}
+              as not Ready for 30 minutes. Likely an ACME solver error.

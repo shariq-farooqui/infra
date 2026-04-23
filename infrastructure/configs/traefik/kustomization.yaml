@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: traefik
 resources:
   - tls-option.yaml
+  - tls-store.yaml
 secretGenerator:
   - name: cloudflare-origin-pull-ca
     files:

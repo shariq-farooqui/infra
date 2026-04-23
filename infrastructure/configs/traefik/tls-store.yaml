@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: traefik
+spec:
+  # When an Ingress declares `tls: [{hosts: [...]}]` without a
+  # `secretName`, Traefik falls back to this store's default
+  # certificate. The wildcard *.farooqui.ai cert lives here so every
+  # private (tailnet-only) Ingress serves valid TLS without touching
+  # cert-manager or reflector. Public Ingresses keep their per-host
+  # secretName and therefore bypass this default.
+  defaultCertificate:
+    secretName: farooqui-ai-wildcard-tls
