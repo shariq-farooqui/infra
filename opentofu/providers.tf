@@ -8,7 +8,10 @@ terraform {
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 5.0"
+      # Pinned to v4 until cloudflare.tf is migrated to v5 syntax
+      # (cloudflare_record → cloudflare_dns_record, zone data source
+      # changes, etc.). Tracked as a follow-up.
+      version = "~> 4.52"
     }
   }
 }
