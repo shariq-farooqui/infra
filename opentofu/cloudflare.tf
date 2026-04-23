@@ -65,6 +65,24 @@ resource "cloudflare_record" "analytics" {
   comment = "Umami analytics"
 }
 
+# Wildcard for tailnet-only services. Points at the homelab's CGNAT
+# tailnet address, so every subdomain not explicitly declared above
+# resolves to 100.x.y.z. Off-tailnet devices get an unroutable IP and
+# the connection times out; tailnet devices reach Traefik via
+# WireGuard. Explicit A records (apex, www, status, analytics) take
+# DNS precedence over this wildcard, so public services continue to
+# flow through Cloudflare's proxy. Not proxied because CF won't
+# forward to a non-routable origin.
+resource "cloudflare_record" "wildcard_tailnet" {
+  zone_id = data.cloudflare_zone.farooqui.id
+  name    = "*"
+  type    = "A"
+  content = var.homelab_tailnet_ip
+  proxied = false
+  ttl     = 1
+  comment = "Tailnet-only services (fallback for unlisted subdomains)"
+}
+
 # Authenticated Origin Pulls: CF presents a client cert signed by the
 # Origin Pull CA on every fetch; Traefik's TLSOption in the cluster
 # requires that client cert. Together these ensure only CF can speak
