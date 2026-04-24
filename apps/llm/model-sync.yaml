@@ -33,13 +33,13 @@ data:
         hf download "$repo" "$file" --local-dir /models
     }
 
-    download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-Q4_K_M.gguf
+    download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
     download unsloth/Qwen3.6-27B-GGUF     Qwen3.6-27B-Q5_K_M.gguf
     download unsloth/Qwen3.5-9B-GGUF      Qwen3.5-9B-Q5_K_M.gguf
     download unsloth/Qwen3.5-4B-GGUF      Qwen3.5-4B-Q5_K_M.gguf
     download unsloth/Qwen3.5-0.8B-GGUF    Qwen3.5-0.8B-Q6_K.gguf
-    download unsloth/gemma-4-e4b-it-GGUF  gemma-4-e4b-it-Q5_K_M.gguf
-    download unsloth/gemma-4-e2b-it-GGUF  gemma-4-e2b-it-Q6_K.gguf
+    download unsloth/gemma-4-e4b-it-GGUF  gemma-4-E4B-it-Q5_K_M.gguf
+    download unsloth/gemma-4-e2b-it-GGUF  gemma-4-E2B-it-Q6_K.gguf
 
     echo "All models present:"
     ls -lh /models

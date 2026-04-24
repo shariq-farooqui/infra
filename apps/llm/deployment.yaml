@@ -25,7 +25,7 @@ spec:
       # take tens of minutes on a gigabit link with hf_transfer on.
       initContainers:
         - name: model-sync
-          image: ghcr.io/astral-sh/uv:python3.12-alpine
+          image: ghcr.io/astral-sh/uv:python3.12
           command: ["sh", "/scripts/sync.sh"]
           env:
             # uv's cache needs a writable HOME; the default /root is
