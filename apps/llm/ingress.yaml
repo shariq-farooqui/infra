@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: llama-swap
+  namespace: llm
+spec:
+  ingressClassName: traefik
+  # No secretName: Traefik falls back to the wildcard cert in its
+  # default TLSStore (infrastructure/configs/traefik/tls-store.yaml).
+  # No CF origin-pull TLSOption either: this host is served over the
+  # tailnet wildcard DNS record, not through Cloudflare, so the
+  # public-origin mTLS requirement would reject every tailnet request.
+  tls:
+    - hosts:
+        - llm.farooqui.ai
+  rules:
+    - host: llm.farooqui.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: llama-swap
+                port:
+                  number: 80

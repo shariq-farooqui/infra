@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-sync-script
+  namespace: llm
+data:
+  sync.sh: |
+    #!/bin/sh
+    # Idempotent GGUF downloader: for each model below, check the
+    # target file on the PVC; if missing, fetch from Hugging Face via
+    # uvx (no install step, ephemeral venv managed by uv). Runs as an
+    # initContainer on the llama-swap Deployment, so pod restarts are
+    # free but the first boot has to download ~60 GB.
+    #
+    # HF_TOKEN (sops-encrypted secret, mounted as env) unlocks PRO
+    # download speeds; hf download picks it up automatically.
+    # HF_HUB_ENABLE_HF_TRANSFER turns on the chunked parallel
+    # downloader, roughly doubling throughput on a gigabit link.
+    set -eu
+    cd /models
+
+    export HF_HUB_ENABLE_HF_TRANSFER=1
+
+    download() {
+      repo="$1"
+      file="$2"
+      if [ -f "$file" ]; then
+        echo "$file already present"
+        return
+      fi
+      echo "Downloading $file from $repo"
+      uvx --with hf_transfer --from huggingface_hub \
+        hf download "$repo" "$file" --local-dir /models
+    }
+
+    download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-Q4_K_M.gguf
+    download unsloth/Qwen3.6-27B-GGUF     Qwen3.6-27B-Q5_K_M.gguf
+    download unsloth/Qwen3.5-9B-GGUF      Qwen3.5-9B-Q5_K_M.gguf
+    download unsloth/Qwen3.5-4B-GGUF      Qwen3.5-4B-Q5_K_M.gguf
+    download unsloth/Qwen3.5-0.8B-GGUF    Qwen3.5-0.8B-Q6_K.gguf
+    download unsloth/gemma-4-e4b-it-GGUF  gemma-4-e4b-it-Q5_K_M.gguf
+    download unsloth/gemma-4-e2b-it-GGUF  gemma-4-e2b-it-Q6_K.gguf
+
+    echo "All models present:"
+    ls -lh /models

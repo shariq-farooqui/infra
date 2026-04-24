@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-swap
+  namespace: llm
+  labels:
+    app.kubernetes.io/name: llama-swap
+spec:
+  replicas: 1
+  strategy:
+    # Recreate so the old pod releases the single ReadWriteOnce PVC
+    # before the new one starts. RollingUpdate would deadlock.
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llama-swap
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: llama-swap
+    spec:
+      # The init pulls GGUFs via uvx; the script is idempotent so
+      # restarts after a partial sync resume where they left off.
+      # First boot with all seven models downloads ~60 GB and can
+      # take tens of minutes on a gigabit link with hf_transfer on.
+      initContainers:
+        - name: model-sync
+          image: ghcr.io/astral-sh/uv:python3.12-alpine
+          command: ["sh", "/scripts/sync.sh"]
+          env:
+            # uv's cache needs a writable HOME; the default /root is
+            # fine since the pod uses an emptyDir there.
+            - name: HOME
+              value: /home/uv
+            # HF Pro token unlocks higher download bandwidth. Source
+            # is sops-encrypted; reconciled by flux's kustomize
+            # controller into a plain Secret at apply time. Marked
+            # optional so the pod still rolls before secrets.yaml is
+            # populated; hf download falls back to anonymous.
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-token
+                  key: token
+                  optional: true
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: sync-script
+              mountPath: /scripts
+            - name: uv-home
+              mountPath: /home/uv
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: llama-swap
+          image: ghcr.io/mostlygeek/llama-swap:cpu
+          args:
+            - "-config"
+            - "/config/config.yaml"
+            - "-listen"
+            - "0.0.0.0:8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # llama.cpp NUMA hint: benign on single-socket desktop CPUs
+            # and keeps behaviour consistent if the host ever moves to
+            # a multi-socket box.
+            - name: LLAMA_ARG_NUMA
+              value: "distribute"
+          resources:
+            requests:
+              # This pod is the heaviest workload on the node by a
+              # wide margin; reserve enough CPU and RAM to reflect
+              # the typical loaded-model working set rather than
+              # idle llama-swap (~50 MB, 0.01 CPU).
+              cpu: "2"
+              memory: 16Gi
+            # No CPU limit: inference is compute-bound and any ceiling
+            # throttles tok/s directly. Memory limit caps the biggest
+            # expected working set (Qwen3.6-35B-A3B Q4 at 32k ctx is
+            # ~26 GB resident with Q8 KV cache) plus headroom for
+            # swap-in while the next model loads.
+            limits:
+              memory: 64Gi
+          readinessProbe:
+            # llama-swap always serves /v1/models regardless of whether
+            # any model is loaded, so it's a stable liveness signal.
+            httpGet:
+              path: /v1/models
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: config
+              mountPath: /config
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models
+        - name: config
+          configMap:
+            name: llama-swap-config
+        - name: sync-script
+          configMap:
+            name: model-sync-script
+            defaultMode: 0o755
+        - name: uv-home
+          emptyDir:
+            sizeLimit: 2Gi
