@@ -6,33 +6,40 @@ metadata:
 data:
   sync.sh: |
     #!/bin/sh
-    # Idempotent GGUF downloader: for each model below, check the
+    # Idempotent GGUF downloader. For each model below, check the
     # target file on the PVC; if missing, fetch from Hugging Face via
-    # uvx (no install step, ephemeral venv managed by uv). Runs as an
-    # initContainer on the llama-swap Deployment, so pod restarts are
-    # free but the first boot has to download ~60 GB.
+    # uvx (ephemeral venv managed by uv, no install step).
     #
-    # HF_TOKEN (sops-encrypted secret, mounted as env) unlocks PRO
-    # download speeds; hf download picks it up automatically.
-    # HF_HUB_ENABLE_HF_TRANSFER turns on the chunked parallel
-    # downloader, roughly doubling throughput on a gigabit link.
+    # mmproj files share the filename `mmproj-F16.gguf` across repos,
+    # so we rename each to a model-specific name during download to
+    # keep the flat /models layout unambiguous.
+    #
+    # HF_TOKEN (sops-encrypted secret) unlocks Pro download speeds;
+    # hf picks it up automatically from env. HF_HUB_ENABLE_HF_TRANSFER
+    # turns on the chunked parallel downloader.
     set -eu
     cd /models
-
     export HF_HUB_ENABLE_HF_TRANSFER=1
 
+    # download <repo> <source-filename> [<dest-filename>]
+    # The third argument lets us rename (needed for mmproj dedupe).
     download() {
       repo="$1"
-      file="$2"
-      if [ -f "$file" ]; then
-        echo "$file already present"
+      src="$2"
+      dst="${3:-$2}"
+      if [ -f "$dst" ]; then
+        echo "$dst already present"
         return
       fi
-      echo "Downloading $file from $repo"
+      echo "Downloading $repo::$src -> $dst"
       uvx --with hf_transfer --from huggingface_hub \
-        hf download "$repo" "$file" --local-dir /models
+        hf download "$repo" "$src" --local-dir /models
+      if [ "$src" != "$dst" ]; then
+        mv "/models/$src" "/models/$dst"
+      fi
     }
 
+    # Text weights
     download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
     download unsloth/Qwen3.6-27B-GGUF     Qwen3.6-27B-Q5_K_M.gguf
     download unsloth/Qwen3.5-9B-GGUF      Qwen3.5-9B-Q5_K_M.gguf
@@ -40,6 +47,15 @@ data:
     download unsloth/Qwen3.5-0.8B-GGUF    Qwen3.5-0.8B-Q6_K.gguf
     download unsloth/gemma-4-e4b-it-GGUF  gemma-4-E4B-it-Q5_K_M.gguf
     download unsloth/gemma-4-e2b-it-GGUF  gemma-4-E2B-it-Q6_K.gguf
+
+    # Vision projectors, one per model, renamed to avoid collision
+    download unsloth/Qwen3.6-35B-A3B-GGUF mmproj-F16.gguf mmproj-qwen3.6-35b-a3b.gguf
+    download unsloth/Qwen3.6-27B-GGUF     mmproj-F16.gguf mmproj-qwen3.6-27b.gguf
+    download unsloth/Qwen3.5-9B-GGUF      mmproj-F16.gguf mmproj-qwen3.5-9b.gguf
+    download unsloth/Qwen3.5-4B-GGUF      mmproj-F16.gguf mmproj-qwen3.5-4b.gguf
+    download unsloth/Qwen3.5-0.8B-GGUF    mmproj-F16.gguf mmproj-qwen3.5-0.8b.gguf
+    download unsloth/gemma-4-e4b-it-GGUF  mmproj-F16.gguf mmproj-gemma4-e4b.gguf
+    download unsloth/gemma-4-e2b-it-GGUF  mmproj-F16.gguf mmproj-gemma4-e2b.gguf
 
     echo "All models present:"
     ls -lh /models

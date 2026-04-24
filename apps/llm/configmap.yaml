@@ -18,6 +18,11 @@ data:
     # in the /v1/chat/completions body; the server honours request-
     # level chat_template_kwargs and overrides the CLI default.
     #
+    # Every profile also loads its vision projector (--mmproj), so a
+    # single endpoint serves both text chat and image input. The
+    # mmproj adds ~900 MB to the resident set when a profile is
+    # loaded; memory is unloaded alongside weights on TTL expiry.
+    #
     # Sampler defaults follow Unsloth's published per-family
     # settings for non-thinking mode; every sampler field is also
     # client-overridable (temperature=0 in a request wins over
@@ -28,9 +33,10 @@ data:
 
     # Shared llama-server flags. Threads match the i7-8700's physical
     # cores (6); threads-batch uses HT (12) since prompt eval is
-    # compute-bound and benefits. KV cache is Q8 per Unsloth guidance
-    # to cut memory without measurable quality loss, and mlock+no-mmap
-    # pins weights so the first token isn't stalled by page faults.
+    # compute-bound. KV cache is Q8 per Unsloth guidance, and
+    # mlock+no-mmap pins weights so the first token isn't stalled by
+    # page faults. --no-webui disables the llama-server built-in UI
+    # since OpenWebUI is the only frontend users should see.
     macros:
       llama-server-base: >-
         /app/llama-server
@@ -40,6 +46,7 @@ data:
         --mlock --no-mmap
         --cache-type-k q8_0 --cache-type-v q8_0
         --jinja
+        --no-webui
         --chat-template-kwargs '{"enable_thinking":false}'
 
     models:
@@ -50,28 +57,27 @@ data:
         cmd: >-
           ${llama-server-base}
           --model /models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+          --mmproj /models/mmproj-qwen3.6-35b-a3b.gguf
           --ctx-size 32768
           --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
           --presence-penalty 1.5 --repeat-penalty 1.0
         ttl: 600
 
-      # Dense Qwen3.6-27B. Better single-shot quality than the MoE on
-      # precise tasks but ~5x slower on this CPU; keep around for
-      # quality-first calls and be ready to wait.
       qwen3.6-27b:
         cmd: >-
           ${llama-server-base}
           --model /models/Qwen3.6-27B-Q5_K_M.gguf
+          --mmproj /models/mmproj-qwen3.6-27b.gguf
           --ctx-size 16384
           --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
           --presence-penalty 1.5 --repeat-penalty 1.0
         ttl: 600
 
-      # Dense Qwen3.5-9B. Fast enough for interactive use.
       qwen3.5-9b:
         cmd: >-
           ${llama-server-base}
           --model /models/Qwen3.5-9B-Q5_K_M.gguf
+          --mmproj /models/mmproj-qwen3.5-9b.gguf
           --ctx-size 32768
           --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
           --presence-penalty 1.5 --repeat-penalty 1.0
@@ -81,6 +87,7 @@ data:
         cmd: >-
           ${llama-server-base}
           --model /models/Qwen3.5-4B-Q5_K_M.gguf
+          --mmproj /models/mmproj-qwen3.5-4b.gguf
           --ctx-size 32768
           --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
           --presence-penalty 1.5 --repeat-penalty 1.0
@@ -90,18 +97,19 @@ data:
         cmd: >-
           ${llama-server-base}
           --model /models/Qwen3.5-0.8B-Q6_K.gguf
+          --mmproj /models/mmproj-qwen3.5-0.8b.gguf
           --ctx-size 32768
           --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
           --presence-penalty 1.5 --repeat-penalty 1.0
         ttl: 600
 
       # Gemma 4 general defaults from Google/Unsloth: temp 1.0,
-      # top_p 0.95, top_k 64. Repetition penalty stays disabled
-      # unless loops appear.
+      # top_p 0.95, top_k 64. Repetition penalty disabled by default.
       gemma4-e4b:
         cmd: >-
           ${llama-server-base}
           --model /models/gemma-4-E4B-it-Q5_K_M.gguf
+          --mmproj /models/mmproj-gemma4-e4b.gguf
           --ctx-size 32768
           --temp 1.0 --top-p 0.95 --top-k 64
         ttl: 600
@@ -110,6 +118,7 @@ data:
         cmd: >-
           ${llama-server-base}
           --model /models/gemma-4-E2B-it-Q6_K.gguf
+          --mmproj /models/mmproj-gemma4-e2b.gguf
           --ctx-size 32768
           --temp 1.0 --top-p 0.95 --top-k 64
         ttl: 600
