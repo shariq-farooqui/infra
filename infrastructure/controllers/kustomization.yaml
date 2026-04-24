@@ -6,4 +6,5 @@ resources:
   - tailscale-operator
   - observability
   - reflector
+  - reloader
   - postgres

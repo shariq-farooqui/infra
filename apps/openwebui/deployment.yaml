@@ -5,6 +5,8 @@ metadata:
   namespace: openwebui
   labels:
     app.kubernetes.io/name: openwebui
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   strategy:

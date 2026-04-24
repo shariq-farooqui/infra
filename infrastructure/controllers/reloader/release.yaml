@@ -1,0 +1,47 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: reloader
+  namespace: reloader
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: reloader
+      version: "2.2.11"
+      sourceRef:
+        kind: HelmRepository
+        name: stakater
+        namespace: reloader
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Watches ConfigMaps and Secrets cluster-wide; when the content of
+    # one referenced by a Deployment/StatefulSet/DaemonSet changes,
+    # rolls the workload. Two opt-in modes:
+    #   * `reloader.stakater.com/auto: "true"` on a workload — watch
+    #     every ConfigMap/Secret that workload mounts or references
+    #     via env.
+    #   * `reloader.stakater.com/search: "true"` on a specific
+    #     ConfigMap/Secret — watch workloads that have an explicit
+    #     match annotation; finer-grained but more wiring per app.
+    reloader:
+      # Auto mode is the ergonomic default for a homelab where every
+      # app's config is in git anyway; there's no risk of unexpected
+      # restarts from third-party changes.
+      watchGlobally: true
+      reloadStrategy: annotations
+      # Conservative resources; reloader is idle most of the time and
+      # just watches the k8s API.
+      deployment:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 128Mi

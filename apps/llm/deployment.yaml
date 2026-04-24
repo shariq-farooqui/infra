@@ -5,6 +5,12 @@ metadata:
   namespace: llm
   labels:
     app.kubernetes.io/name: llama-swap
+  annotations:
+    # Reloader watches every ConfigMap and Secret this Deployment
+    # mounts or references via env; a content change triggers a
+    # rollout automatically. Covers both the llama-swap config and
+    # the model-sync script without per-resource wiring.
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   strategy:

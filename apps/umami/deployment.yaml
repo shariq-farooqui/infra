@@ -5,6 +5,8 @@ metadata:
   namespace: umami
   labels:
     app.kubernetes.io/name: umami
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   selector:
