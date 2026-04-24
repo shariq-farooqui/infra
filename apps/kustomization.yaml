@@ -5,3 +5,4 @@ resources:
   - gatus
   - umami
   - llm
+  - openwebui
