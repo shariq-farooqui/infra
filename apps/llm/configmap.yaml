@@ -36,11 +36,11 @@ data:
         /app/llama-server
         --host 127.0.0.1 --port ${PORT}
         --threads 6 --threads-batch 12
-        --flash-attn
+        --flash-attn on
         --mlock --no-mmap
         --cache-type-k q8_0 --cache-type-v q8_0
         --jinja
-        --chat-template-kwargs {"enable_thinking":false}
+        --chat-template-kwargs '{"enable_thinking":false}'
 
     models:
       # Primary: Qwen3.6 MoE. 35B total, 3B active per token, so CPU
