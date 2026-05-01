@@ -132,6 +132,15 @@
     ];
   };
 
+  # IPv4 forwarding for k3s pod networking and klipper-lb DNAT. Without
+  # this, traffic arriving on the public NIC for the LoadBalancer IP
+  # never crosses into the cluster network namespace and the public
+  # ingress paths black-hole. NixOS leaves this off by default; k3s
+  # itself sets it at runtime via sysctl, but a configuration switch
+  # resets it back to the kernel default before k3s gets another chance,
+  # so it has to be declared here to survive activation.
+  boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+
   # Operator shell ergonomics.
   #
   # zsh with syntax highlighting, ghost-text history suggestions, and a
