@@ -8,10 +8,7 @@ terraform {
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      # Pinned to v4 until cloudflare.tf is migrated to v5 syntax
-      # (cloudflare_record → cloudflare_dns_record, zone data source
-      # changes, etc.). Tracked as a follow-up.
-      version = "~> 4.52"
+      version = "~> 5.0"
     }
   }
 }
@@ -29,5 +26,7 @@ provider "github" {
 }
 
 # Cloudflare provider reads CLOUDFLARE_API_TOKEN from the environment. Token
-# scopes needed so far: Account > Workers R2 Storage:Edit (for the R2 bucket).
+# scopes: Account > Workers R2 Storage:Edit (R2 bucket), Zone > DNS:Edit
+# (farooqui.ai records), Zone > Zone Settings:Edit (always_use_https) and
+# Zone > SSL and Certificates:Edit (Authenticated Origin Pulls).
 provider "cloudflare" {}
