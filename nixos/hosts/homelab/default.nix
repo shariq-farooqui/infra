@@ -311,6 +311,19 @@
       "/var/lib/rancher/k3s/server/db"
       "/var/lib/rancher/k3s/storage"
     ];
+    # Exclude PVs whose contents are regenerable on a fresh cluster:
+    # LLM weights re-pull from HuggingFace, Prometheus and Loki history
+    # are ephemeral by nature, Grafana dashboards live in GitOps, and
+    # OpenWebUI's PV holds chat/RAG state we're treating as transient.
+    # Patterns match the local-path provisioner's
+    # pvc-<uuid>_<namespace>_<pvc-name> directory naming.
+    exclude = [
+      "pvc-*_llm_models"
+      "pvc-*_openwebui_data"
+      "pvc-*_observability_prometheus-*"
+      "pvc-*_observability_storage-loki-*"
+      "pvc-*_observability_grafana"
+    ];
     timerConfig = {
       OnCalendar = "daily";
       Persistent = true;
