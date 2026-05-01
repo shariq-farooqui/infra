@@ -351,11 +351,15 @@
   # leave the previous generation running; no operator action is needed
   # unless a build error appears in the logs. persistent = true means a
   # missed timer (host was off) runs on next boot.
+  #
+  # --override-input replaces the locked nixpkgs entry for this rebuild
+  # only, without trying to write flake.lock back into the GitHub-fetched
+  # flake (which lives in a read-only nix store path and would error).
   system.autoUpgrade = {
     enable = true;
     flake = "github:shariq-farooqui/infra?dir=nixos";
     flags = [
-      "--update-input" "nixpkgs"
+      "--override-input" "nixpkgs" "github:nixos/nixpkgs/nixos-25.11"
       "-L" # stream build logs to journald
     ];
     dates = "weekly";
